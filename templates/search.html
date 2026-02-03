@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}搜索 - Personal Life OS{% endblock %}
+{% block mobile_title %}搜索{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+
+    <!-- ========== 搜索框 ========== -->
+    <div class="bg-white rounded-2xl shadow-lg p-4 md:p-6 mb-6">
+        <form method="GET" action="{{ url_for('search') }}" class="flex gap-3">
+            <input type="text" name="q" value="{{ query }}" placeholder="搜索速记和收藏..."
+                class="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+                autofocus>
+
+            <button type="submit"
+                class="px-6 py-3 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 transition-colors shadow-md">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+
+    {% if query %}
+
+    <!-- ========== 速记结果 ========== -->
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-pen-to-square text-primary-600"></i>
+            速记 ({{ results.memos|length }})
+        </h2>
+
+        {% if results.memos %}
+        <div class="space-y-3">
+            {% for memo in results.memos %}
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <div class="memo-content text-gray-700">{{ memo.content|markdown|safe }}</div>
+                <div class="text-xs text-gray-400 mt-2">
+                    {{ memo.created_at.strftime('%Y-%m-%d %H:%M') }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-400 text-center py-6">没有找到相关速记</p>
+        {% endif %}
+    </div>
+
+    <!-- ========== 收藏结果 ========== -->
+    <div>
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-bookmark text-primary-600"></i>
+            收藏 ({{ results.bookmarks|length }})
+        </h2>
+
+        {% if results.bookmarks %}
+        <div class="space-y-3">
+            {% for bookmark in results.bookmarks %}
+            <a href="{{ bookmark.url }}" target="_blank"
+                class="block bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div class="font-medium text-gray-800">{{ bookmark.title or bookmark.url }}</div>
+                {% if bookmark.description %}
+                <div class="text-sm text-gray-500 mt-1">{{ bookmark.description }}</div>
+                {% endif %}
+                <div class="text-xs text-gray-400 mt-2">
+                    {{ bookmark.created_at.strftime('%Y-%m-%d %H:%M') }}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-400 text-center py-6">没有找到相关收藏</p>
+        {% endif %}
+    </div>
+
+    {% else %}
+
+    <!-- ========== 搜索提示 ========== -->
+    <div class="text-center py-12 text-gray-400">
+        <i class="fas fa-search text-4xl mb-3"></i>
+        <p>输入关键词搜索你的速记和收藏</p>
+    </div>
+
+    {% endif %}
+
+</div>
+{% endblock %}

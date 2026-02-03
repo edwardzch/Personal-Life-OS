@@ -1,0 +1,112 @@
+/* Personal Life OS - 自定义样式 */
+
+/* 响应式容器 */
+.main-content {
+    transition: margin-left 0.3s ease;
+}
+
+/* 手机端底部安全区域 */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .bottom-nav {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* Markdown 内容样式 */
+.memo-content p {
+    margin-bottom: 0.5rem;
+}
+
+.memo-content ul,
+.memo-content ol {
+    margin-left: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.memo-content code {
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.memo-content pre {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 0.5rem;
+}
+
+/* 卡片悬停效果 */
+.card-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* 输入框焦点效果 */
+.input-focus:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+}
+
+/* 淡入动画 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+/* 状态标签 */
+.status-unread {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.status-read {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.status-archived {
+    background-color: #e5e7eb;
+    color: #4b5563;
+}
+
+/* 时间显示 */
+.time-display {
+    font-variant-numeric: tabular-nums;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

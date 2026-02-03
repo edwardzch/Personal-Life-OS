@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}速记流 - Personal Life OS{% endblock %}
+{% block mobile_title %}速记流{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+
+    <!-- ========== 输入区域 ========== -->
+    <div class="bg-white rounded-2xl shadow-lg p-4 md:p-6 mb-6 card-hover">
+        <form hx-post="{{ url_for('add_memo') }}" hx-target="#memo-list" hx-swap="afterbegin"
+            hx-on::after-request="this.reset(); this.querySelector('textarea').focus()">
+
+            <textarea name="content" placeholder="记录一些想法... (支持 Markdown 格式)"
+                class="w-full min-h-[100px] md:min-h-[120px] p-3 border border-gray-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                onkeydown="if(event.ctrlKey && event.key === 'Enter') this.form.requestSubmit()"></textarea>
+
+            <div class="flex items-center justify-between mt-3">
+                <input type="text" name="tags" placeholder="标签 (逗号分隔)"
+                    class="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 mr-3">
+
+                <button type="submit"
+                    class="px-6 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors shadow-md hover:shadow-lg">
+                    <i class="fas fa-paper-plane mr-2 hidden md:inline"></i>
+                    发送
+                </button>
+            </div>
+
+            <p class="text-xs text-gray-400 mt-2 hidden md:block">
+                <i class="fas fa-keyboard mr-1"></i> Ctrl + Enter 快速发送
+            </p>
+        </form>
+    </div>
+
+    <!-- ========== 速记列表 ========== -->
+    <div id="memo-list" class="space-y-4">
+        {% for memo in memos %}
+        {% include 'partials/memo_item.html' %}
+        {% else %}
+        <div class="text-center py-12 text-gray-400">
+            <i class="fas fa-feather-pointed text-4xl mb-3"></i>
+            <p>还没有任何速记</p>
+            <p class="text-sm">开始记录你的第一条想法吧！</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

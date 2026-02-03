@@ -1,0 +1,71 @@
+<!-- 单个书签卡片 (用于 HTMX 局部刷新) -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 card-hover animate-fade-in overflow-hidden"
+    id="bookmark-{{ bookmark.id }}">
+    <!-- 状态指示条 -->
+    <div class="h-1 
+        {% if bookmark.status == 'unread' %}bg-yellow-400
+        {% elif bookmark.status == 'read' %}bg-green-400
+        {% else %}bg-gray-300{% endif %}">
+    </div>
+
+    <div class="p-4">
+        <!-- 标题 -->
+        <a href="{{ bookmark.url }}" target="_blank"
+            class="block font-medium text-gray-800 hover:text-primary-600 transition-colors line-clamp-2 mb-2">
+            {{ bookmark.title or bookmark.url }}
+        </a>
+
+        <!-- 描述 -->
+        {% if bookmark.description %}
+        <p class="text-sm text-gray-500 line-clamp-2 mb-3">{{ bookmark.description }}</p>
+        {% endif %}
+
+        <!-- URL 预览 -->
+        <p class="text-xs text-gray-400 truncate mb-3">
+            <i class="fas fa-link mr-1"></i>
+            {{ bookmark.url|truncate(40) }}
+        </p>
+
+        <!-- 操作栏 -->
+        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+            <!-- 状态切换 -->
+            <div class="flex gap-1">
+                <form hx-post="{{ url_for('update_bookmark_status', id=bookmark.id) }}"
+                    hx-target="#bookmark-{{ bookmark.id }}" hx-swap="outerHTML">
+                    <input type="hidden" name="status"
+                        value="{% if bookmark.status == 'unread' %}read{% else %}unread{% endif %}">
+                    <button type="submit"
+                        class="p-2 rounded-lg transition-colors
+                            {% if bookmark.status == 'read' %}text-green-600 bg-green-50{% else %}text-gray-400 hover:bg-gray-100{% endif %}"
+                        title="{% if bookmark.status == 'unread' %}标记已读{% else %}标记未读{% endif %}">
+                        <i class="fas fa-check"></i>
+                    </button>
+                </form>
+
+                <form hx-post="{{ url_for('update_bookmark_status', id=bookmark.id) }}"
+                    hx-target="#bookmark-{{ bookmark.id }}" hx-swap="outerHTML">
+                    <input type="hidden" name="status" value="archived">
+                    <button type="submit"
+                        class="p-2 rounded-lg transition-colors
+                            {% if bookmark.status == 'archived' %}text-gray-600 bg-gray-100{% else %}text-gray-400 hover:bg-gray-100{% endif %}"
+                        title="归档">
+                        <i class="fas fa-archive"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- 时间和删除 -->
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-400 time-display">
+                    {{ bookmark.created_at.strftime('%m-%d') }}
+                </span>
+
+                <button type="button" hx-delete="{{ url_for('delete_bookmark', id=bookmark.id) }}"
+                    hx-target="#bookmark-{{ bookmark.id }}" hx-swap="outerHTML" hx-confirm="确定要删除这个收藏吗？"
+                    class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

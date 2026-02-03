@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}稍后读 - Personal Life OS{% endblock %}
+{% block mobile_title %}稍后读{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+
+    <!-- ========== 添加书签 ========== -->
+    <div class="bg-white rounded-2xl shadow-lg p-4 md:p-6 mb-6 card-hover">
+        <form hx-post="{{ url_for('add_bookmark') }}" hx-target="#bookmark-list" hx-swap="afterbegin"
+            hx-on::after-request="this.reset()">
+
+            <div class="flex flex-col md:flex-row gap-3">
+                <input type="url" name="url" required placeholder="粘贴网址..."
+                    class="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    hx-get="{{ url_for('api_fetch_title') }}" hx-trigger="blur changed delay:500ms"
+                    hx-target="next input[name='title']" hx-swap="outerHTML" hx-vals="js:{url: event.target.value}">
+
+                <input type="text" name="title" placeholder="标题 (自动获取)"
+                    class="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500">
+
+                <button type="submit"
+                    class="px-6 py-3 bg-primary-600 text-white font-medium rounded-xl hover:bg-primary-700 transition-colors shadow-md">
+                    <i class="fas fa-plus mr-2"></i>
+                    收藏
+                </button>
+            </div>
+
+            <input type="text" name="description" placeholder="备注说明 (可选)"
+                class="w-full mt-3 px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500">
+        </form>
+    </div>
+
+    <!-- ========== 筛选标签 ========== -->
+    <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+        <a href="{{ url_for('bookmarks', status='all') }}"
+            class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors
+                  {% if current_status == 'all' %}bg-primary-600 text-white{% else %}bg-white text-gray-600 hover:bg-gray-100{% endif %}">
+            全部
+        </a>
+        <a href="{{ url_for('bookmarks', status='unread') }}"
+            class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors
+                  {% if current_status == 'unread' %}bg-yellow-500 text-white{% else %}bg-white text-gray-600 hover:bg-gray-100{% endif %}">
+            <i class="fas fa-clock mr-1"></i> 未读
+        </a>
+        <a href="{{ url_for('bookmarks', status='read') }}"
+            class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors
+                  {% if current_status == 'read' %}bg-green-500 text-white{% else %}bg-white text-gray-600 hover:bg-gray-100{% endif %}">
+            <i class="fas fa-check mr-1"></i> 已读
+        </a>
+        <a href="{{ url_for('bookmarks', status='archived') }}"
+            class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors
+                  {% if current_status == 'archived' %}bg-gray-500 text-white{% else %}bg-white text-gray-600 hover:bg-gray-100{% endif %}">
+            <i class="fas fa-archive mr-1"></i> 归档
+        </a>
+    </div>
+
+    <!-- ========== 书签列表 ========== -->
+    <!-- 电脑端：网格布局 | 手机端：单列列表 -->
+    <div id="bookmark-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for bookmark in bookmarks %}
+        {% include 'partials/bookmark_item.html' %}
+        {% else %}
+        <div class="col-span-full text-center py-12 text-gray-400">
+            <i class="fas fa-bookmark text-4xl mb-3"></i>
+            <p>还没有收藏任何网页</p>
+            <p class="text-sm">找到有价值的内容就收藏起来吧！</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+<!-- 单条速记卡片 (用于 HTMX 局部刷新) -->
+<div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 card-hover animate-fade-in"
+    id="memo-{{ memo.id }}">
+    <div class="flex items-start gap-3">
+        <!-- 内容 -->
+        <div class="flex-1 min-w-0">
+            <div class="memo-content text-gray-700 prose prose-sm max-w-none">
+                {{ memo.content|markdown|safe }}
+            </div>
+
+            <!-- 标签 -->
+            {% if memo.tags %}
+            <div class="flex flex-wrap gap-1 mt-2">
+                {% for tag in memo.tags.split(',') %}
+                <span class="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs rounded-full">
+                    {{ tag.strip() }}
+                </span>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- 时间 -->
+            <div class="text-xs text-gray-400 mt-2 time-display">
+                <i class="far fa-clock mr-1"></i>
+                {{ memo.created_at.strftime('%Y-%m-%d %H:%M') }}
+            </div>
+        </div>
+
+        <!-- 删除按钮 -->
+        <button type="button" hx-delete="{{ url_for('delete_memo', id=memo.id) }}" hx-target="#memo-{{ memo.id }}"
+            hx-swap="outerHTML" hx-confirm="确定要删除这条速记吗？"
+            class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+    </div>
+</div>

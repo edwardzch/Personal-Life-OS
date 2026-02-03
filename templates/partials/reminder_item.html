@@ -1,0 +1,54 @@
+<!-- 单条提醒卡片 (用于 HTMX 局部刷新) -->
+{% set is_overdue = reminder.target_datetime < now() and not reminder.is_done %} {% set
+    is_upcoming=reminder.target_datetime> now() and (reminder.target_datetime - now()).total_seconds() < 3600 %} <div
+        class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 card-hover animate-fade-in
+    {% if reminder.is_done %}opacity-60{% endif %}
+    {% if is_overdue %}border-l-4 border-l-red-500{% elif is_upcoming %}border-l-4 border-l-yellow-500{% endif %}"
+        id="reminder-{{ reminder.id }}">
+
+        <div class="flex items-start gap-3">
+            <!-- 完成勾选框 -->
+            <button type="button" hx-post="{{ url_for('toggle_reminder', id=reminder.id) }}"
+                hx-target="#reminder-{{ reminder.id }}" hx-swap="outerHTML"
+                class="flex-none w-6 h-6 mt-0.5 rounded-full border-2 flex items-center justify-center transition-colors
+                {% if reminder.is_done %}bg-green-500 border-green-500 text-white{% else %}border-gray-300 hover:border-primary-500{% endif %}">
+                {% if reminder.is_done %}
+                <i class="fas fa-check text-xs"></i>
+                {% endif %}
+            </button>
+
+            <!-- 内容 -->
+            <div class="flex-1 min-w-0">
+                <div
+                    class="font-medium {% if reminder.is_done %}line-through text-gray-400{% else %}text-gray-800{% endif %}">
+                    {{ reminder.title }}
+                </div>
+
+                {% if reminder.description %}
+                <div class="text-sm text-gray-500 mt-1">{{ reminder.description }}</div>
+                {% endif %}
+
+                <!-- 时间 -->
+                <div class="flex items-center gap-2 mt-2 text-xs time-display
+                {% if is_overdue %}text-red-500
+                {% elif is_upcoming %}text-yellow-600
+                {% else %}text-gray-400{% endif %}">
+                    <i class="far fa-clock"></i>
+                    {{ reminder.target_datetime.strftime('%Y-%m-%d %H:%M') }}
+
+                    {% if is_overdue and not reminder.is_done %}
+                    <span class="px-2 py-0.5 bg-red-100 text-red-600 rounded-full">已过期</span>
+                    {% elif is_upcoming %}
+                    <span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full">即将到期</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 删除按钮 -->
+            <button type="button" hx-delete="{{ url_for('delete_reminder', id=reminder.id) }}"
+                hx-target="#reminder-{{ reminder.id }}" hx-swap="outerHTML" hx-confirm="确定要删除这个提醒吗？"
+                class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+        </div>
