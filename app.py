@@ -96,6 +96,32 @@ def delete_memo(id):
     return '', 200
 
 
+@app.route('/memos/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_memo(id):
+    memo = Memo.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        content = request.form.get('content', '').strip()
+        tags = request.form.get('tags', '').strip()
+        
+        if content:
+            memo.content = content
+            memo.tags = tags
+            db.session.commit()
+        
+        if request.headers.get('HX-Request'):
+            return render_template('partials/memo_item.html', memo=memo)
+        
+        return redirect(url_for('memos'))
+    
+    # GET 请求返回编辑表单
+    if request.headers.get('HX-Request'):
+        return render_template('partials/memo_edit.html', memo=memo)
+    
+    return redirect(url_for('memos'))
+
+
 # ==================== 稍后读模块 ====================
 
 @app.route('/bookmarks')

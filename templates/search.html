@@ -34,6 +34,18 @@
             {% for memo in results.memos %}
             <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                 <div class="memo-content text-gray-700">{{ memo.content|markdown|safe }}</div>
+
+                <!-- 标签 -->
+                {% if memo.tags %}
+                <div class="flex flex-wrap gap-1 mt-2">
+                    {% for tag in memo.tags.split(',') %}
+                    <span class="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs rounded-full">
+                        {{ tag.strip() }}
+                    </span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
                 <div class="text-xs text-gray-400 mt-2">
                     {{ memo.created_at.strftime('%Y-%m-%d %H:%M') }}
                 </div>
