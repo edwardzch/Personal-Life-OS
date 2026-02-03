@@ -44,11 +44,21 @@
                 </div>
             </div>
 
-            <!-- 删除按钮 -->
-            <button type="button" hx-delete="{{ url_for('delete_reminder', id=reminder.id) }}"
-                hx-target="#reminder-{{ reminder.id }}" hx-swap="outerHTML" hx-confirm="确定要删除这个提醒吗？"
-                class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                <i class="fas fa-trash-alt"></i>
-            </button>
+            <!-- 操作按钮 -->
+            <div class="flex flex-col gap-1">
+                <!-- 编辑按钮 -->
+                <button type="button" hx-get="{{ url_for('edit_reminder', id=reminder.id) }}"
+                    hx-target="#reminder-{{ reminder.id }}" hx-swap="outerHTML"
+                    class="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+                    <i class="fas fa-edit"></i>
+                </button>
+
+                <!-- 删除按钮 -->
+                <button type="button" hx-delete="{{ url_for('delete_reminder', id=reminder.id) }}"
+                    hx-target="#reminder-{{ reminder.id }}" hx-swap="outerHTML" hx-confirm="确定要删除这个提醒吗？"
+                    class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
         </div>
         </div>

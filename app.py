@@ -188,6 +188,33 @@ def delete_bookmark(id):
     return '', 200
 
 
+@app.route('/bookmarks/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_bookmark(id):
+    bookmark = Bookmark.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        url = request.form.get('url', '').strip()
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        
+        if url:
+            bookmark.url = url
+            bookmark.title = title or url
+            bookmark.description = description
+            db.session.commit()
+        
+        if request.headers.get('HX-Request'):
+            return render_template('partials/bookmark_item.html', bookmark=bookmark)
+        
+        return redirect(url_for('bookmarks'))
+    
+    if request.headers.get('HX-Request'):
+        return render_template('partials/bookmark_edit.html', bookmark=bookmark)
+    
+    return redirect(url_for('bookmarks'))
+
+
 @app.route('/api/fetch-title')
 @login_required
 def api_fetch_title():
@@ -267,6 +294,33 @@ def delete_reminder(id):
     db.session.delete(reminder)
     db.session.commit()
     return '', 200
+
+
+@app.route('/reminders/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_reminder(id):
+    reminder = Reminder.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
+        target_datetime_str = request.form.get('target_datetime', '')
+        
+        if title and target_datetime_str:
+            reminder.title = title
+            reminder.description = description
+            reminder.target_datetime = datetime.fromisoformat(target_datetime_str)
+            db.session.commit()
+        
+        if request.headers.get('HX-Request'):
+            return render_template('partials/reminder_item.html', reminder=reminder)
+        
+        return redirect(url_for('reminders'))
+    
+    if request.headers.get('HX-Request'):
+        return render_template('partials/reminder_edit.html', reminder=reminder)
+    
+    return redirect(url_for('reminders'))
 
 
 @app.route('/api/pending-reminders')
