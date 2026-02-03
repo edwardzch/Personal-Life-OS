@@ -85,17 +85,60 @@ from app import app as application
 ### Q: 页面显示 502 错误？
 打开 **Web** 页面的 **Error log**，查看具体错误信息。
 
-### Q: 如何更新代码？
-```bash
-cd ~/Personal-Life-OS
-git pull
-# 回到 Web 页面点击 Reload
-```
-
 ### Q: 免费账户有什么限制？
 - 每天 100 秒 CPU 时间（个人使用完全够）
 - 512MB 存储空间
 - 网站 3 个月不活跃会被暂停（登录续期即可）
+
+---
+
+## 代码维护与更新
+
+### 方式 A：通过 Git 更新（推荐）
+
+适合在本地开发，然后同步到服务器。
+
+**1. 本地修改代码后，推送到 GitHub：**
+```bash
+cd c:\Users\zhangch64\Desktop\RecordingTools
+git add .
+git commit -m "更新了xxx功能"
+git push
+```
+
+**2. 在 PythonAnywhere Bash 控制台拉取：**
+```bash
+cd ~/Personal-Life-OS
+git pull
+```
+
+**3. 重新加载应用：**
+- 进入 **Web** 页面 → 点击绿色 **Reload** 按钮
+
+---
+
+### 方式 B：直接在 PythonAnywhere 编辑
+
+适合小修改，不推荐大改动。
+
+1. 进入 **Files** 页面
+2. 导航到 `/home/edwardzch/Personal-Life-OS/`
+3. 点击文件名直接编辑
+4. 保存后点击 **Web** → **Reload**
+
+---
+
+### 常用维护命令速查
+
+| 场景 | 命令 |
+|------|------|
+| 更新代码 | `cd ~/Personal-Life-OS && git pull` |
+| 安装新依赖 | `workon personal-life-os-venv && pip install xxx` |
+| 查看错误日志 | Web 页面 → Error log |
+| 重启应用 | Web 页面 → Reload |
+| 备份数据库 | `cp ~/Personal-Life-OS/instance/app.db ~/app.db.bak` |
+
+> ⚠️ **注意**：修改代码后**必须点 Reload**，否则不会生效
 
 ---
 
