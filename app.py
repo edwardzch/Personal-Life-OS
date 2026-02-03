@@ -360,6 +360,32 @@ def api_test_notification():
     })
 
 
+@app.route('/api/debug-reminders')
+@login_required
+def api_debug_reminders():
+    """调试：查看所有提醒状态"""
+    beijing_tz = timezone(timedelta(hours=8))
+    now = datetime.now(beijing_tz).replace(tzinfo=None)
+    
+    reminders = Reminder.query.order_by(Reminder.target_datetime.desc()).limit(10).all()
+    
+    result = []
+    for r in reminders:
+        result.append({
+            'id': r.id,
+            'title': r.title,
+            'target': r.target_datetime.strftime('%Y-%m-%d %H:%M:%S'),
+            'is_done': r.is_done,
+            'notified': r.notified,
+            'is_overdue': r.target_datetime <= now
+        })
+    
+    return jsonify({
+        'server_time': now.strftime('%Y-%m-%d %H:%M:%S'),
+        'reminders': result
+    })
+
+
 def send_pushplus_notification(title, content):
     """发送 PushPlus 微信推送"""
     token = app.config.get('PUSHPLUS_TOKEN')

@@ -210,19 +210,26 @@
             // 检查到期提醒
             async checkReminders() {
                 try {
+                    console.log('[提醒检查] 正在检查...', new Date().toLocaleString());
                     const response = await fetch('/api/pending-reminders');
                     const reminders = await response.json();
+                    console.log('[提醒检查] 收到结果:', reminders);
 
-                    reminders.forEach(r => {
-                        this.sendNotification(r.title, r.description);
-                    });
-
-                    // 如果有提醒到期，也播放声音提示
                     if (reminders.length > 0) {
+                        reminders.forEach(r => {
+                            console.log('[提醒检查] 发送通知:', r.title);
+                            const sent = this.sendNotification(r.title, r.description);
+                            console.log('[提醒检查] 通知发送结果:', sent);
+
+                            // 如果浏览器通知失败，用 alert 作为备用
+                            if (!sent) {
+                                alert('⏰ 提醒: ' + r.title + '\n' + (r.description || ''));
+                            }
+                        });
                         this.playSound();
                     }
                 } catch (e) {
-                    console.error('检查提醒失败:', e);
+                    console.error('[提醒检查] 失败:', e);
                 }
             },
 
