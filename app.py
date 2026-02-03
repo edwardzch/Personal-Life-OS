@@ -69,6 +69,14 @@ def memos():
     return render_template('memos.html', memos=all_memos)
 
 
+@app.route('/memos/tag/<tag>')
+@login_required
+def memos_by_tag(tag):
+    """按标签筛选速记"""
+    all_memos = Memo.query.filter(Memo.tags.contains(tag)).order_by(Memo.created_at.desc()).all()
+    return render_template('memos.html', memos=all_memos, current_tag=tag)
+
+
 @app.route('/memos/add', methods=['POST'])
 @login_required
 def add_memo():

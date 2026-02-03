@@ -32,6 +32,19 @@
         </form>
     </div>
 
+    <!-- ========== 标签筛选提示 ========== -->
+    {% if current_tag %}
+    <div class="bg-primary-50 border border-primary-200 rounded-xl p-3 mb-4 flex items-center justify-between">
+        <span class="text-primary-700">
+            <i class="fas fa-tag mr-2"></i>
+            正在查看标签: <strong>{{ current_tag }}</strong>
+        </span>
+        <a href="{{ url_for('memos') }}" class="text-primary-600 hover:text-primary-800 text-sm">
+            <i class="fas fa-times mr-1"></i>清除筛选
+        </a>
+    </div>
+    {% endif %}
+
     <!-- ========== 速记列表 ========== -->
     <div id="memo-list" class="space-y-4">
         {% for memo in memos %}
