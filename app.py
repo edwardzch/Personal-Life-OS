@@ -302,11 +302,11 @@ def init_db():
         
         # 创建默认用户 (如果不存在)
         if not User.query.filter_by(username='admin').first():
-            user = User(username='admin')
-            user.set_password('admin123')  # 请修改默认密码
+            user = User(username='edikkgizc')
+            user.set_password('edikkgizc')  # 请修改默认密码
             db.session.add(user)
             db.session.commit()
-            print('已创建默认用户: admin / admin123')
+            # print('已创建默认用户: admin / admin123')
 
 
 if __name__ == '__main__':
