@@ -264,7 +264,11 @@ def search():
     results = {'memos': [], 'bookmarks': []}
     
     if query:
-        results['memos'] = Memo.query.filter(Memo.content.contains(query)).order_by(Memo.created_at.desc()).all()
+        # 搜索速记：同时搜索内容和标签
+        results['memos'] = Memo.query.filter(
+            (Memo.content.contains(query)) | (Memo.tags.contains(query))
+        ).order_by(Memo.created_at.desc()).all()
+        # 搜索书签：搜索标题和描述
         results['bookmarks'] = Bookmark.query.filter(
             (Bookmark.title.contains(query)) | (Bookmark.description.contains(query))
         ).order_by(Bookmark.created_at.desc()).all()
