@@ -1,6 +1,6 @@
 import os
 import markdown
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from config import Config
@@ -327,7 +327,10 @@ def edit_reminder(id):
 @login_required
 def api_pending_reminders():
     """检查是否有到期的提醒 (用于浏览器通知)"""
-    now = datetime.now()
+    # 使用北京时间 (UTC+8)
+    beijing_tz = timezone(timedelta(hours=8))
+    now = datetime.now(beijing_tz).replace(tzinfo=None)  # 转为naive datetime进行比较
+    
     pending = Reminder.query.filter(
         Reminder.target_datetime <= now,
         Reminder.is_done == False,
@@ -418,7 +421,9 @@ def markdown_filter(text):
 def utility_processor():
     """注入模板全局函数"""
     def now():
-        return datetime.now()
+        # 使用北京时间 (UTC+8)
+        beijing_tz = timezone(timedelta(hours=8))
+        return datetime.now(beijing_tz).replace(tzinfo=None)
     return dict(now=now)
 
 
