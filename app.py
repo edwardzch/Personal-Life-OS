@@ -310,6 +310,8 @@ def edit_reminder(id):
             reminder.title = title
             reminder.description = description
             reminder.target_datetime = datetime.fromisoformat(target_datetime_str)
+            # 修改时间后重置通知状态，这样可以重新触发通知
+            reminder.notified = False
             db.session.commit()
         
         if request.headers.get('HX-Request'):
