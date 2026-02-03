@@ -14,3 +14,7 @@ class Config:
     
     # 应用配置
     APP_NAME = 'Personal Life OS'
+    
+    # PushPlus 微信推送配置 (可选)
+    # 访问 https://www.pushplus.plus 获取 Token
+    PUSHPLUS_TOKEN = os.environ.get('PUSHPLUS_TOKEN') or ''

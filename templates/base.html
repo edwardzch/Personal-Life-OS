@@ -43,6 +43,11 @@
 
     <!-- 图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- PWA 配置 -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon-192.png') }}">
+    <meta name="apple-mobile-web-app-title" content="LifeOS">
 </head>
 
 <body class="bg-gray-50 min-h-screen">
@@ -159,30 +164,128 @@
     <!-- 浏览器通知脚本 -->
     {% if current_user.is_authenticated %}
     <script>
-        // 请求通知权限
-        if ('Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission();
-        }
+        // 通知状态管理
+        const NotificationManager = {
+            // 检查并请求通知权限
+            async requestPermission() {
+                if (!('Notification' in window)) {
+                    console.log('此浏览器不支持通知');
+                    return false;
+                }
 
-        // 每分钟检查到期提醒
-        function checkReminders() {
-            fetch('/api/pending-reminders')
-                .then(r => r.json())
-                .then(reminders => {
+                if (Notification.permission === 'granted') {
+                    return true;
+                }
+
+                if (Notification.permission === 'default') {
+                    const permission = await Notification.requestPermission();
+                    return permission === 'granted';
+                }
+
+                return false;
+            },
+
+            // 发送浏览器通知
+            sendNotification(title, body) {
+                if (Notification.permission === 'granted') {
+                    const notification = new Notification('⏰ ' + title, {
+                        body: body || '到期提醒',
+                        icon: '/static/icon-192.png',
+                        requireInteraction: true,
+                        tag: 'reminder-' + Date.now()
+                    });
+
+                    // 点击通知跳转到提醒页面
+                    notification.onclick = () => {
+                        window.focus();
+                        window.location.href = '/reminders';
+                    };
+
+                    return true;
+                }
+                return false;
+            },
+
+            // 检查到期提醒
+            async checkReminders() {
+                try {
+                    const response = await fetch('/api/pending-reminders');
+                    const reminders = await response.json();
+
                     reminders.forEach(r => {
-                        if (Notification.permission === 'granted') {
-                            new Notification('⏰ ' + r.title, {
-                                body: r.description || '到期提醒',
-                                icon: '/static/icon-192.png',
-                                tag: 'reminder-' + r.id
-                            });
+                        this.sendNotification(r.title, r.description);
+                    });
+
+                    // 如果有提醒到期，也播放声音提示
+                    if (reminders.length > 0) {
+                        this.playSound();
+                    }
+                } catch (e) {
+                    console.error('检查提醒失败:', e);
+                }
+            },
+
+            // 播放提示音
+            playSound() {
+                try {
+                    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleVcBAHOi2PqoaRcAFXWr3v+sZg4AF3az4v+wYgoAFnm35P+wXwgAE3m55v+wXAcAEHi55/+wWgYADXi55/+vWQYAC3i55/+vWAUACXi55/+uVwUAB3e45/+uVgQABne45/+uVQQABXa35/+tVAQABHa35/+tUwMAA3a25/+sUgMAAnW25/+sUQIAAXW15/+rUAIAAHS05/+rTwIAAHSz5v+qTgEAAHOy5v+qTQEAAHKx5f+pTAEAAHGw5f+oSwAAAHCv5P+oSgAAAG+u5P+nSQAAAG6s4/+mSAAAAG2r4v+lRwAAAGyr4f+kRgAAAGup4P+jRQAAAGqn3/+iRAAAAGmm3v+hQwAAAGik3f+gQgAAAGei3P+fQQAAAGah2/+eQAAAAGWf2v+dPwAAAGOd2f+cPgAAAGKb2P+bPQAAAGGZ1/+aPAAAAF+X1f+ZOwAAAF6V1P+YOgAAAF2T0/+XOQAAAFuR0v+WOAAAAFKP0P+TLwAA');
+                    audio.volume = 0.5;
+                    audio.play();
+                } catch (e) {
+                    // 忽略音频播放错误
+                }
+            },
+
+            // 测试通知
+            async testNotification() {
+                const hasPermission = await this.requestPermission();
+                if (hasPermission) {
+                    this.sendNotification('测试成功', '浏览器通知功能正常！');
+                    alert('✅ 浏览器通知已发送！请查看通知栏。');
+                } else {
+                    alert('❌ 需要允许通知权限！请点击地址栏左侧的锁图标 → 通知 → 允许');
+                }
+
+                // 同时测试微信推送
+                fetch('/api/test-notification')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.pushplus_configured) {
+                            if (data.pushplus_sent) {
+                                alert('✅ 微信推送测试成功！请查看微信。');
+                            } else {
+                                alert('❌ 微信推送失败，请检查 Token 是否正确。');
+                            }
+                        } else {
+                            console.log('微信推送未配置');
                         }
                     });
-                });
-        }
+            },
 
-        setInterval(checkReminders, 60000);
-        checkReminders();
+            // 启动定时检查
+            start() {
+                // 立即检查一次
+                this.checkReminders();
+                // 每30秒检查一次（更频繁）
+                setInterval(() => this.checkReminders(), 30000);
+            }
+        };
+
+        // 页面加载后启动
+        document.addEventListener('DOMContentLoaded', () => {
+            NotificationManager.requestPermission();
+            NotificationManager.start();
+
+            // 注册 Service Worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(reg => console.log('Service Worker 注册成功'))
+                    .catch(err => console.log('Service Worker 注册失败:', err));
+            }
+        });
+
+        // 暴露测试函数供手动调用
+        window.testNotification = () => NotificationManager.testNotification();
     </script>
     {% endif %}
 </body>

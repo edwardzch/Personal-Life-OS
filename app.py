@@ -337,10 +337,52 @@ def api_pending_reminders():
     result = []
     for r in pending:
         result.append({'id': r.id, 'title': r.title, 'description': r.description or ''})
+        # 发送微信推送
+        send_pushplus_notification(r.title, r.description or '提醒时间已到')
         r.notified = True
     
     db.session.commit()
     return jsonify(result)
+
+
+@app.route('/api/test-notification')
+@login_required
+def api_test_notification():
+    """测试通知功能"""
+    # 测试 PushPlus
+    pushplus_ok = send_pushplus_notification('测试通知', '如果你收到这条消息，说明微信推送配置成功！')
+    return jsonify({
+        'pushplus_configured': bool(app.config.get('PUSHPLUS_TOKEN')),
+        'pushplus_sent': pushplus_ok
+    })
+
+
+def send_pushplus_notification(title, content):
+    """发送 PushPlus 微信推送"""
+    token = app.config.get('PUSHPLUS_TOKEN')
+    if not token:
+        return False
+    
+    try:
+        import requests
+        url = 'http://www.pushplus.plus/send'
+        data = {
+            'token': token,
+            'title': f'⏰ {title}',
+            'content': content,
+            'template': 'html'
+        }
+        response = requests.post(url, json=data, timeout=10)
+        result = response.json()
+        if result.get('code') == 200:
+            print(f'PushPlus 推送成功: {title}')
+            return True
+        else:
+            print(f'PushPlus 推送失败: {result}')
+            return False
+    except Exception as e:
+        print(f'PushPlus 推送异常: {e}')
+        return False
 
 
 # ==================== 搜索模块 ====================

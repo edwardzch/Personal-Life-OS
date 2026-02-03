@@ -32,8 +32,16 @@
         </form>
     </div>
 
-    <!-- ========== 显示已完成开关 ========== -->
-    <div class="flex items-center justify-end mb-4">
+    <!-- ========== 操作栏 ========== -->
+    <div class="flex items-center justify-between mb-4">
+        <!-- 测试通知按钮 -->
+        <button type="button" onclick="testNotification()"
+            class="flex items-center gap-2 px-3 py-1.5 text-sm text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors">
+            <i class="fas fa-bell"></i>
+            测试通知
+        </button>
+
+        <!-- 显示已完成开关 -->
         <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
             <input type="checkbox" {% if show_done %}checked{% endif %}
                 onchange="window.location.href='{{ url_for('reminders') }}?show_done=' + (this.checked ? 'true' : 'false')"
