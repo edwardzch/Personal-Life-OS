@@ -325,6 +325,7 @@
                 try {
                     const response = await fetch('/api/data-version');
                     const serverVersions = await response.json();
+                    console.log('[同步] 服务器版本:', serverVersions, '本地版本:', this.localVersions);
 
                     // 获取当前页面模块
                     const path = window.location.pathname;
