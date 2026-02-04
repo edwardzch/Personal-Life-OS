@@ -57,3 +57,32 @@ class Reminder(db.Model):
 
     def __repr__(self):
         return f'<Reminder {self.title}>'
+
+
+class DataVersion(db.Model):
+    """数据版本号 - 用于多设备同步"""
+    id = db.Column(db.Integer, primary_key=True)
+    module = db.Column(db.String(50), unique=True, nullable=False)  # memos, bookmarks, reminders
+    version = db.Column(db.Integer, default=0)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    @staticmethod
+    def bump(module_name):
+        """增加指定模块的版本号"""
+        dv = DataVersion.query.filter_by(module=module_name).first()
+        if not dv:
+            dv = DataVersion(module=module_name, version=1)
+            db.session.add(dv)
+        else:
+            dv.version += 1
+        db.session.commit()
+        return dv.version
+
+    @staticmethod
+    def get_all_versions():
+        """获取所有模块的版本号"""
+        versions = {}
+        for dv in DataVersion.query.all():
+            versions[dv.module] = dv.version
+        return versions
+

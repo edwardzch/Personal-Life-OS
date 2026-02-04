@@ -215,8 +215,19 @@
                     const reminders = await response.json();
                     console.log('[提醒检查] 收到结果:', reminders);
 
-                    if (reminders.length > 0) {
-                        reminders.forEach(r => {
+                    // 获取本设备已通知的提醒ID列表
+                    let notifiedIds = JSON.parse(localStorage.getItem('notifiedReminders') || '[]');
+
+                    // 清理过期的已通知记录（只保留最近100个）
+                    if (notifiedIds.length > 100) {
+                        notifiedIds = notifiedIds.slice(-100);
+                    }
+
+                    let hasNewReminder = false;
+                    reminders.forEach(r => {
+                        // 检查这个提醒在本设备是否已通知
+                        const reminderId = `${r.id}-${r.target_time}`;
+                        if (!notifiedIds.includes(reminderId)) {
                             console.log('[提醒检查] 发送通知:', r.title);
                             const sent = this.sendNotification(r.title, r.description);
                             console.log('[提醒检查] 通知发送结果:', sent);
@@ -225,7 +236,17 @@
                             if (!sent) {
                                 alert('⏰ 提醒: ' + r.title + '\n' + (r.description || ''));
                             }
-                        });
+
+                            // 记录已通知
+                            notifiedIds.push(reminderId);
+                            hasNewReminder = true;
+                        }
+                    });
+
+                    // 保存已通知列表
+                    localStorage.setItem('notifiedReminders', JSON.stringify(notifiedIds));
+
+                    if (hasNewReminder) {
                         this.playSound();
                     }
                 } catch (e) {
@@ -294,6 +315,51 @@
 
         // 暴露测试函数供手动调用
         window.testNotification = () => NotificationManager.testNotification();
+
+        // ========== 多设备同步 ==========
+        const SyncManager = {
+            localVersions: {},
+
+            // 检查数据版本
+            async checkVersions() {
+                try {
+                    const response = await fetch('/api/data-version');
+                    const serverVersions = await response.json();
+
+                    // 获取当前页面模块
+                    const path = window.location.pathname;
+                    let currentModule = null;
+                    if (path.includes('/memos')) currentModule = 'memos';
+                    else if (path.includes('/bookmarks')) currentModule = 'bookmarks';
+                    else if (path.includes('/reminders')) currentModule = 'reminders';
+
+                    // 检查当前模块是否有更新
+                    if (currentModule && this.localVersions[currentModule] !== undefined) {
+                        if (serverVersions[currentModule] > this.localVersions[currentModule]) {
+                            console.log(`[同步] ${currentModule} 有更新，刷新页面...`);
+                            window.location.reload();
+                            return;
+                        }
+                    }
+
+                    // 更新本地版本号
+                    this.localVersions = serverVersions;
+                } catch (e) {
+                    console.error('[同步] 检查失败:', e);
+                }
+            },
+
+            // 启动同步
+            start() {
+                // 首次获取版本号
+                this.checkVersions();
+                // 每15秒检查一次
+                setInterval(() => this.checkVersions(), 15000);
+            }
+        };
+
+        // 启动同步
+        SyncManager.start();
     </script>
     {% endif %}
 </body>

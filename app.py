@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from config import Config
-from models import db, User, Memo, Bookmark, Reminder
+from models import db, User, Memo, Bookmark, Reminder, DataVersion
 
 # 创建 Flask 应用
 app = Flask(__name__)
@@ -87,6 +87,7 @@ def add_memo():
         memo = Memo(content=content, tags=tags)
         db.session.add(memo)
         db.session.commit()
+        DataVersion.bump('memos')
     
     # HTMX 请求返回新增的单条记录 HTML
     if request.headers.get('HX-Request'):
@@ -101,6 +102,7 @@ def delete_memo(id):
     memo = Memo.query.get_or_404(id)
     db.session.delete(memo)
     db.session.commit()
+    DataVersion.bump('memos')
     return '', 200
 
 
@@ -117,6 +119,7 @@ def edit_memo(id):
             memo.content = content
             memo.tags = tags
             db.session.commit()
+            DataVersion.bump('memos')
         
         if request.headers.get('HX-Request'):
             return render_template('partials/memo_item.html', memo=memo)
@@ -158,6 +161,7 @@ def add_bookmark():
         bookmark = Bookmark(url=url, title=title, description=description)
         db.session.add(bookmark)
         db.session.commit()
+        DataVersion.bump('bookmarks')
         
         if request.headers.get('HX-Request'):
             return render_template('partials/bookmark_item.html', bookmark=bookmark)
@@ -172,6 +176,7 @@ def update_bookmark_status(id):
     new_status = request.form.get('status', 'unread')
     bookmark.status = new_status
     db.session.commit()
+    DataVersion.bump('bookmarks')
     
     if request.headers.get('HX-Request'):
         return render_template('partials/bookmark_item.html', bookmark=bookmark)
@@ -185,6 +190,7 @@ def delete_bookmark(id):
     bookmark = Bookmark.query.get_or_404(id)
     db.session.delete(bookmark)
     db.session.commit()
+    DataVersion.bump('bookmarks')
     return '', 200
 
 
@@ -203,6 +209,7 @@ def edit_bookmark(id):
             bookmark.title = title or url
             bookmark.description = description
             db.session.commit()
+            DataVersion.bump('bookmarks')
         
         if request.headers.get('HX-Request'):
             return render_template('partials/bookmark_item.html', bookmark=bookmark)
@@ -267,6 +274,7 @@ def add_reminder():
         reminder = Reminder(title=title, description=description, target_datetime=target_datetime)
         db.session.add(reminder)
         db.session.commit()
+        DataVersion.bump('reminders')
         
         if request.headers.get('HX-Request'):
             return render_template('partials/reminder_item.html', reminder=reminder)
@@ -280,6 +288,7 @@ def toggle_reminder(id):
     reminder = Reminder.query.get_or_404(id)
     reminder.is_done = not reminder.is_done
     db.session.commit()
+    DataVersion.bump('reminders')
     
     if request.headers.get('HX-Request'):
         return render_template('partials/reminder_item.html', reminder=reminder)
@@ -293,6 +302,7 @@ def delete_reminder(id):
     reminder = Reminder.query.get_or_404(id)
     db.session.delete(reminder)
     db.session.commit()
+    DataVersion.bump('reminders')
     return '', 200
 
 
@@ -313,6 +323,7 @@ def edit_reminder(id):
             # 修改时间后重置通知状态，这样可以重新触发通知
             reminder.notified = False
             db.session.commit()
+            DataVersion.bump('reminders')
         
         if request.headers.get('HX-Request'):
             return render_template('partials/reminder_item.html', reminder=reminder)
@@ -328,23 +339,29 @@ def edit_reminder(id):
 @app.route('/api/pending-reminders')
 @login_required
 def api_pending_reminders():
-    """检查是否有到期的提醒 (用于浏览器通知)"""
+    """检查是否有到期的提醒 (用于浏览器通知)
+    
+    改为返回所有未完成且已过期的提醒，由客户端自行管理已通知状态
+    这样每个设备都能收到通知
+    """
     # 使用北京时间 (UTC+8)
     beijing_tz = timezone(timedelta(hours=8))
-    now = datetime.now(beijing_tz).replace(tzinfo=None)  # 转为naive datetime进行比较
+    now = datetime.now(beijing_tz).replace(tzinfo=None)
     
+    # 返回所有到期且未完成的提醒（不检查 notified 状态）
     pending = Reminder.query.filter(
         Reminder.target_datetime <= now,
-        Reminder.is_done == False,
-        Reminder.notified == False
+        Reminder.is_done == False
     ).all()
     
     result = []
     for r in pending:
-        result.append({'id': r.id, 'title': r.title, 'description': r.description or ''})
-        # 发送微信推送
-        send_pushplus_notification(r.title, r.description or '提醒时间已到')
-        r.notified = True
+        result.append({
+            'id': r.id, 
+            'title': r.title, 
+            'description': r.description or '',
+            'target_time': r.target_datetime.strftime('%Y-%m-%d %H:%M')
+        })
     
     db.session.commit()
     return jsonify(result)
@@ -386,6 +403,13 @@ def api_debug_reminders():
         'server_time': now.strftime('%Y-%m-%d %H:%M:%S'),
         'reminders': result
     })
+
+
+@app.route('/api/data-version')
+@login_required
+def api_data_version():
+    """获取所有模块的数据版本号，用于多设备同步"""
+    return jsonify(DataVersion.get_all_versions())
 
 
 def send_pushplus_notification(title, content):
